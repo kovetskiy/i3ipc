@@ -66,6 +66,8 @@ func (self SubscribeError) Error() string {
 
 // Private subscribe function. Sets up the socket.
 func (self *IPCSocket) subscribe(type_ EventType) (err error) {
+	self.ev = type_
+
 	json_reply, err := self.Raw(I3Subscribe, "[\""+payloads[type_]+"\"]")
 	if err != nil {
 		return
@@ -105,8 +107,18 @@ func (self *IPCSocket) listen() {
 			break
 		}
 		msg, err := self.recv()
-		// XXX: This ignores all errors. Maybe a FIXME, maybe not.
 		if err != nil {
+			sock, err := GetIPCSocket()
+			if err != nil {
+				continue
+			}
+
+			self.socket = sock.socket
+			err = self.subscribe(self.ev)
+			if err != nil {
+				panic(err)
+			}
+
 			continue
 		}
 		// Drop non-event messages.

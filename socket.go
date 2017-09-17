@@ -64,6 +64,7 @@ func (self MessageError) Error() string {
 
 // An Unix socket to communicate with i3.
 type IPCSocket struct {
+	ev          EventType
 	socket      net.Conn
 	open        bool
 	subscribers []chan Event
