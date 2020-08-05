@@ -22,6 +22,7 @@ const (
 	I3WorkspaceEvent EventType = iota
 	I3OutputEvent
 	I3ModeEvent
+	I3WindowEvent
 	// private value used for setting up internal stuff in init()
 	// The idea is that if there's a new type of event added to i3, it only
 	// needs to be added here and in the payloads slice below, and the rest of
@@ -30,7 +31,7 @@ const (
 )
 
 // This slice is used to map event types to their string representation.
-var payloads []string = []string{"workspace", "output", "mode"}
+var payloads []string = []string{"workspace", "output", "mode", "window"}
 
 // Dynamically add an event type by defining a name for it. Just in case i3 adds
 // a new one and this library hasn't been updated yet. Returns the EventType
@@ -49,7 +50,8 @@ type Event struct {
 	Type EventType
 	// "change" is the name of the single field of the JSON map that i3 sends
 	// when an event occurs, describing what happened.
-	Change string
+	Change  string
+	Payload json.RawMessage
 }
 
 // Struct for replies from subscribe messages.
@@ -128,6 +130,7 @@ func (self *IPCSocket) listen() {
 
 		var event Event
 		event.Type = EventType(msg.Type)
+		event.Payload = json.RawMessage(msg.Payload)
 		err = json.Unmarshal(msg.Payload, &event)
 
 		// Send each subscriber the event in a nonblocking manner.
